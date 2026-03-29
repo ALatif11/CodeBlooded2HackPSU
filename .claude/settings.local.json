@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m venv venv)",
+      "WebSearch",
+      "Bash(find /c/Users/adam1/Documents/GitHub/CodeBlooded2HackPSU -type f -name *openclaw* -o -name *SOUL* -o -name *SKILL*)"
+    ]
+  }
+}
