@@ -3,7 +3,12 @@
     "allow": [
       "Bash(python -m venv venv)",
       "WebSearch",
-      "Bash(find /c/Users/adam1/Documents/GitHub/CodeBlooded2HackPSU -type f -name *openclaw* -o -name *SOUL* -o -name *SKILL*)"
+      "Bash(find /c/Users/adam1/Documents/GitHub/CodeBlooded2HackPSU -type f -name *openclaw* -o -name *SOUL* -o -name *SKILL*)",
+      "Bash(xargs grep:*)",
+      "WebFetch(domain:docs.openclaw.ai)",
+      "Read(//c/Users/adam1/.openclaw/**)",
+      "Read(//c/Users/adam1/.openclaw/workspace/**)",
+      "Bash(chmod +x ~/.openclaw/skills/psu-canvas/canvas_fetch.sh)"
     ]
   }
 }
