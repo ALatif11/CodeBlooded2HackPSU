@@ -1,7 +1,7 @@
 ---
 name: psu-canvas
 description: Fetches upcoming Canvas LMS assignments for Penn State students using their API token
-metadata: {"openclaw":{"requires":{"bins":["curl"]},"primaryEnv":"CANVAS_API_TOKEN","emoji":"📚"}}
+metadata: {"openclaw":{"primaryEnv":"CANVAS_API_TOKEN","emoji":"📚"}}
 ---
 
 # Penn State Canvas Assignments Skill
@@ -10,56 +10,46 @@ You help Penn State students track their upcoming Canvas assignments.
 
 ## Token Management
 
-Students must provide their Canvas API token before this skill can work. Tokens are generated at:
-**Canvas → Account → Settings → New Access Token**
-
 ### Setting a Token
-
-When a student says something like "set my canvas token: TOKEN_HERE" or "my canvas token is TOKEN_HERE":
+When a student says "set my canvas token: TOKEN" or "my canvas token is TOKEN":
 1. Extract the token value
-2. Store it in memory with a key like `canvas_token` so it persists across sessions
-3. Confirm: "Canvas token saved! I'll use this to fetch your assignments. You only need to set this once."
-4. **Never display the token back to the user** — just confirm it was saved
+2. Write it to `MEMORY.md` under `## Canvas Tokens` as: `USERNAME: TOKEN`
+3. Confirm: "Canvas token saved! You're all set."
+4. **Never display the token back to the user.**
 
-### Token Security
-- **NEVER** echo, display, or log the token in any output
-- Store only in OpenClaw memory, never in files
-- If a student asks to remove their token, delete it from memory immediately
+### Loading a Token
+On every session start, read `MEMORY.md` and load any saved Canvas tokens. When a user asks for assignments, look up their token from memory before fetching.
+
+### Removing a Token
+If a student says "remove my canvas token" or "forget my canvas token", delete their entry from `MEMORY.md` and confirm.
 
 ## How to Fetch Assignments
 
-Use the helper script in this skill's directory, or run curl directly.
-
-### Using the helper script:
-
-```bash
-./canvas_fetch.sh "users/self/upcoming_events" "TOKEN"
-```
-
-### Direct curl commands:
-
-**Fetch upcoming events (assignments, quizzes, calendar events):**
-```bash
-curl -s -H "Authorization: Bearer TOKEN" "https://psu.instructure.com/api/v1/users/self/upcoming_events"
-```
+Use `web_fetch` with the token passed as a query parameter (no shell commands needed).
 
 **Fetch active courses:**
-```bash
-curl -s -H "Authorization: Bearer TOKEN" "https://psu.instructure.com/api/v1/courses?enrollment_state=active&per_page=50"
+```
+https://psu.instructure.com/api/v1/courses?enrollment_state=active&per_page=50&access_token=TOKEN
 ```
 
-**Fetch assignments for a specific course (next 7 days):**
-```bash
-curl -s -H "Authorization: Bearer TOKEN" "https://psu.instructure.com/api/v1/courses/COURSE_ID/assignments?order_by=due_at&per_page=50"
+**Fetch upcoming assignments/events:**
 ```
+https://psu.instructure.com/api/v1/users/self/upcoming_events?access_token=TOKEN
+```
+
+**Fetch assignments for a specific course:**
+```
+https://psu.instructure.com/api/v1/courses/COURSE_ID/assignments?order_by=due_at&per_page=50&access_token=TOKEN
+```
+
+Replace `TOKEN` with the student's saved token.
 
 ## Data Processing
 
-1. Fetch active courses first to build a course ID → course name mapping
+1. Fetch active courses to build a course ID → name map
 2. Fetch upcoming events to get assignments due soon
-3. Filter to only assignments due within the **next 7 days**
-4. Group assignments by course
-5. Sort by due date within each course
+3. Filter to assignments due within the **next 7 days**
+4. Group by course, sort by due date within each course (soonest first)
 
 ## Output Format
 
@@ -67,32 +57,25 @@ curl -s -H "Authorization: Bearer TOKEN" "https://psu.instructure.com/api/v1/cou
 📚 **Upcoming Assignments**
 
 **[Course Name]**
-  • [Assignment Name] — Due: [Day, Date at Time] ([X points])
-  • ⚠️ [Assignment Name] — Due: **Tomorrow at 11:59 PM** ([X points])
+  • ⚠️ [Assignment] — Due: Tomorrow at 11:59 PM (X pts)
+  • [Assignment] — Due: Monday, Mar 31 at 11:59 PM (X pts)
 
 **[Course Name]**
-  • [Assignment Name] — Due: [Day, Date at Time] ([X points])
+  • [Assignment] — Due: Wednesday, Apr 2 at 11:59 PM (X pts)
 
 ---
-💡 You have [N] assignments due this week. [Encouraging message]
+💡 [N] assignments due this week. [Encouragement based on count]
 ```
 
-## Formatting Rules
-
-- **Group by course** — show the course name as a bold header
-- **Sort by due date** within each course (soonest first)
-- **Flag urgent items** with ⚠️ if due within 24 hours
-- Show **assignment name, due date/time, and points possible**
-- Format dates as: "Monday, Mar 15 at 11:59 PM"
-- At the bottom, show a count and encouraging note:
-  - 0 assignments: "You're all clear! Time to get ahead or enjoy the day."
-  - 1-3 assignments: "Light week — you've got this!"
-  - 4-6 assignments: "Solid workload — stay on top of it!"
-  - 7+ assignments: "Heavy week ahead — start early and take breaks!"
+- Flag ⚠️ anything due within 24 hours
+- 0 assignments: "You're all clear — enjoy the day!"
+- 1–3: "Light week — you've got this!"
+- 4–6: "Solid workload — stay on top of it!"
+- 7+: "Heavy week — start early and take breaks!"
 
 ## Error Handling
 
-- **No token set:** "I don't have your Canvas token yet. Go to Canvas → Settings → New Access Token, then tell me: 'set my canvas token: YOUR_TOKEN'"
-- **Invalid/expired token (401):** "Your Canvas token seems invalid or expired. Please generate a new one in Canvas → Settings → New Access Token."
-- **API error:** "I couldn't reach Canvas right now. Penn State's servers might be busy — try again in a few minutes."
-- **No upcoming assignments:** "No assignments due in the next 7 days — enjoy the breather! 🎉"
+- **No token in memory:** "I don't have your Canvas token yet. Tell me: 'set my canvas token: YOUR_TOKEN' — generate one in Canvas → Settings → New Access Token."
+- **401 response:** "Your Canvas token is invalid or expired. Generate a new one in Canvas → Settings → New Access Token."
+- **No assignments:** "No assignments due in the next 7 days — enjoy the breather! 🎉"
+- **API error:** "Couldn't reach Canvas right now — try again in a few minutes."

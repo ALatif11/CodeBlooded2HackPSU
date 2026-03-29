@@ -8,7 +8,11 @@
       "WebFetch(domain:docs.openclaw.ai)",
       "Read(//c/Users/adam1/.openclaw/**)",
       "Read(//c/Users/adam1/.openclaw/workspace/**)",
-      "Bash(chmod +x ~/.openclaw/skills/psu-canvas/canvas_fetch.sh)"
+      "Bash(chmod +x ~/.openclaw/skills/psu-canvas/canvas_fetch.sh)",
+      "Bash(cp -r ~/.openclaw/skills/psu-weather ~/.openclaw/workspace/skills/)",
+      "Bash(cp -r ~/.openclaw/skills/psu-news ~/.openclaw/workspace/skills/)",
+      "Bash(cp -r ~/.openclaw/skills/psu-events ~/.openclaw/workspace/skills/)",
+      "Bash(cp -r ~/.openclaw/skills/psu-canvas ~/.openclaw/workspace/skills/)"
     ]
   }
 }
